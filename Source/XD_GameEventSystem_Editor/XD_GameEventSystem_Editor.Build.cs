@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class XD_GameEventSystem : ModuleRules
+public class XD_GameEventSystem_Editor : ModuleRules
 {
-	public XD_GameEventSystem(ReadOnlyTargetRules Target) : base(Target)
+	public XD_GameEventSystem_Editor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -38,9 +38,11 @@ public class XD_GameEventSystem : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+                "UnrealEd",
                 "GameplayTags",
                 "UMG",
 
+                "XD_GameEventSystem",
                 "XD_UnrealLibraryEx",
                 "XD_SaveGameSystem",
                 "XD_GenericGraph",
