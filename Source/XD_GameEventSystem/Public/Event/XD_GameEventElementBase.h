@@ -26,7 +26,7 @@ public:
 
 private:
 	UPROPERTY(SaveGame, Replicated)
-	uint8 bIsFinish : 1;
+	uint8 bIsFinished : 1;
 public:
 	//为真则为必要游戏事件
 	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadOnly, Category = "游戏事件", Meta = (DisplayName = "必要游戏事件", ExposeOnSpawn = true), Replicated)
@@ -57,26 +57,33 @@ public:
 
 	//游戏事件是否完成
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
-	FORCEINLINE bool GetIsFinish() const { return bIsFinish; }
+	FORCEINLINE bool IsFinished() const { return bIsFinished; }
 
-	//游戏事件元素中可能也存在分支，比如说和某人对话中出现的分支
-	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
+	/**
+	* 完成该任务序列
+	* @param	NextEdge		游戏事件元素中可能也存在分支，比如说和某人对话中出现的分支，用Edge区分
+	*/
+	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件", meta = (AdvancedDisplay = "0"))
 	void FinishGameEventElement(class UXD_GameEventGraphEdge* NextEdge);
 
+	//该游戏元素又未完成了调用这个 e.g.目标数量道具减少
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
-	void IsFinishFalse();
+	void SetReactive();
 
 public:
 	void ActivateGameEventElement();
+	//用于激活该游戏事件元素的检查事件
 	UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, Category = "角色|游戏事件")
 	void WhenActivateGameEventElement(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner);
 	virtual void WhenActivateGameEventElement_Implementation(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner){}
 
 	void UnactiveGameEventElement();
+	//用于反激活该游戏事件元素的检查事件
 	UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, Category = "角色|游戏事件")
 	void WhenUnactiveGameEventElement(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner);
 	virtual void WhenUnactiveGameEventElement_Implementation(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner){}
 
+	//游戏事件完成后调用
 	UFUNCTION(BlueprintAuthorityOnly, BlueprintNativeEvent, Category = "角色|游戏事件")
 	void WhenFinishGameEventElement(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner);
 	virtual void WhenFinishGameEventElement_Implementation(class APawn* GameEventOwnerCharacter, class AController* GameEventOwner){}
@@ -85,21 +92,23 @@ public:
 #if WITH_EDITORONLY_DATA
 	bool bHasMultiBranch;
 #endif
-
+	//设置运行时中的游戏事件元素对于与图表的游戏事件元素
 	UFUNCTION(BlueprintNativeEvent, Category = "角色|游戏事件")
-	void SetTemplate(const class UGenericGraphNodeBase* NodeBase);
-	virtual void SetTemplate_Implementation(const class UGenericGraphNodeBase* NodeBase);
+	void SetTemplate(const class UGenericGraphNodeBase* inTemplate);
+	void SetTemplate_Implementation(const class UGenericGraphNodeBase* inTemplate){}
 
+	//游戏事件元素产生的分支，给编辑器获取分支节点模板用
 	UFUNCTION(BlueprintNativeEvent, Category = "角色|游戏事件")
 	TArray<FGenericGraph_NewEdgeParamers> GetFinishGameEventElementBranchEdgeTemplates(UObject* Outer, const class UXD_GameEventGraphNode* GameEventGraphNode) const;
 	virtual TArray<FGenericGraph_NewEdgeParamers> GetFinishGameEventElementBranchEdgeTemplates_Implementation(UObject* Outer, const class UXD_GameEventGraphNode* GameEventGraphNode) const;
 
+	//双击该节点编辑器跳转的目标
 	UFUNCTION(BlueprintNativeEvent, Category = "泛用图表")
 	UObject* GetJumpTargetForDoubleClick() const;
 	virtual UObject* GetJumpTargetForDoubleClick_Implementation() const { return nullptr; }
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "角色|游戏事件")
-	class UXD_GameEventSequenceBase* GameEventOuter_GameEventSequence;
+	class UXD_GameEventSequenceBase* OwingGameEventSequence;
 
 	UFUNCTION(BlueprintPure, Category = "角色|游戏事件")
 	class AController* GetGameEventOwnerController() const;

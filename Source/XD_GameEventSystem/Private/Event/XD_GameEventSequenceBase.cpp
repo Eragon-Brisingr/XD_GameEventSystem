@@ -9,7 +9,7 @@
 
 class UWorld* UXD_GameEventSequenceBase::GetWorld() const
 {
-	return GameEventOuter_GameEventBase ? GameEventOuter_GameEventBase->GetWorld() : nullptr;
+	return OwingGameEvent ? OwingGameEvent->GetWorld() : nullptr;
 }
 
 bool UXD_GameEventSequenceBase::IsSupportedForNetworking() const
@@ -42,6 +42,7 @@ void UXD_GameEventSequenceBase::ReplicatedGameEventElement(bool& WroteSomething,
 
 void UXD_GameEventSequenceBase::ActiveGameEventSequence()
 {
+	GameEventSystem_Display_LOG("%s激活[%s]中的游戏事件序列[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *OwingGameEvent->GetGameEventName().ToString(), *GetDescribe().ToString());
 	for (UXD_GameEventElementBase* GameEventElement : GameEventElementList)
 	{
 		GameEventElement->ActivateGameEventElement();
@@ -60,7 +61,7 @@ bool UXD_GameEventSequenceBase::HasMustGameEventElement()
 	return false;
 }
 
-void UXD_GameEventSequenceBase::FinishAllGameEventElement()
+void UXD_GameEventSequenceBase::DeactiveGameEventSequence()
 {
 	for (UXD_GameEventElementBase* GameEventElement : GameEventElementList)
 	{
@@ -77,7 +78,7 @@ bool UXD_GameEventSequenceBase::IsEveryMustGameEventElementFinished() const
 {
 	for (UXD_GameEventElementBase* GameEventElement : GameEventElementList)
 	{
-		if (GameEventElement->bIsMust && !GameEventElement->GetIsFinish())
+		if (GameEventElement->bIsMust && !GameEventElement->IsFinished())
 		{
 			return false;
 		}
@@ -104,7 +105,7 @@ void UXD_GameEventSequenceBase::ReinitGameEventSequence()
 	{
 		if (GameEventElement)
 		{
-			GameEventElement->GameEventOuter_GameEventSequence = this;
+			GameEventElement->OwingGameEventSequence = this;
 		}
 	}
 }
@@ -120,14 +121,14 @@ void UXD_GameEventSequenceBase::OnRep_GameEventElementList()
 	{
 		if (GameEventElement)
 		{
-			GameEventElement->GameEventOuter_GameEventSequence = this;
+			GameEventElement->OwingGameEventSequence = this;
 		}
 	}
 }
 
 class APawn* UXD_GameEventSequenceBase::GetGameEventOwnerCharacter() const
 {
-	return GameEventOuter_GameEventBase->GetGameEventOwnerCharacter();
+	return OwingGameEvent->GetGameEventOwnerCharacter();
 }
 
 void UGameEventSequence_Branch::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -157,7 +158,7 @@ void UGameEventSequence_Branch::ReinitGameEventSequence()
 	{
 		if (GameEventElementFinishWarpper.GameEventElement)
 		{
-			GameEventElementFinishWarpper.GameEventElement->GameEventOuter_GameEventSequence = this;
+			GameEventElementFinishWarpper.GameEventElement->OwingGameEventSequence = this;
 		}
 	}
 }
@@ -168,9 +169,9 @@ void UGameEventSequence_Branch::ActiveGameEventSequence()
 	InvokeActiveFinishList();
 }
 
-void UGameEventSequence_Branch::FinishAllGameEventElement()
+void UGameEventSequence_Branch::DeactiveGameEventSequence()
 {
-	Super::FinishAllGameEventElement();
+	Super::DeactiveGameEventSequence();
 	DeactiveFinishBranchs();
 }
 
@@ -184,7 +185,7 @@ void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEven
 	//结束游戏事件
 	else
 	{
-		UXD_GameEventSequenceBase* FinishGameEventSequence = GameEventOuter_GameEventBase->GetUnderwayGameEventSequence();
+		UXD_GameEventSequenceBase* FinishGameEventSequence = OwingGameEvent->GetUnderwayGameEventSequence();
 		for (FGameEventElementFinishWarpper& GameEventElementFinishWarpper : GameEventElementFinishList)
 		{
 			if (GameEventElement == GameEventElementFinishWarpper.GameEventElement)
@@ -193,11 +194,11 @@ void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEven
 				{
 					if (GameEventElementFinishWarpper.GameEventFinishBranch->ChildrenNodes.Num() > 0)
 					{
-						GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(GameEventElementFinishWarpper.GameEventFinishBranch->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
+						OwingGameEvent->SetAndActiveNextGameEventSequence(GameEventElementFinishWarpper.GameEventFinishBranch->GetGameEventSequence(OwingGameEvent, NextEdge));
 					}
 					else
 					{
-						GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(nullptr);
+						OwingGameEvent->SetAndActiveNextGameEventSequence(nullptr);
 					}
 				}
 				break;
@@ -206,7 +207,7 @@ void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEven
 	}
 }
 
-void UGameEventSequence_Branch::WhenGameEventElementReUnfinished()
+void UGameEventSequence_Branch::WhenGameEventElementReactive()
 {
 	DeactiveFinishBranchs();
 }
@@ -229,7 +230,7 @@ void UGameEventSequence_Branch::InvokeActiveFinishList()
 	{
 		if (GameEventElementFinishList.Num() == 0)
 		{
-			GameEventOuter_GameEventBase->FinishGameEvent();
+			OwingGameEvent->FinishGameEvent();
 		}
 		else
 		{
@@ -260,7 +261,7 @@ void UGameEventSequence_Branch::OnRep_GameEventElementFinishList()
 	{
 		if (GameEventElementFinishWarpper.GameEventElement)
 		{
-			GameEventElementFinishWarpper.GameEventElement->GameEventOuter_GameEventSequence = this;
+			GameEventElementFinishWarpper.GameEventElement->OwingGameEventSequence = this;
 		}
 	}
 }
@@ -269,14 +270,13 @@ void UGameEventSequence_List::InvokeFinishGameEventSequence(class UXD_GameEventE
 {
 	if (IsEveryMustGameEventElementFinished())
 	{
-		FinishAllGameEventElement();
 		if (NextGameEvent.IsValid())
 		{
-			GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(NextGameEvent->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
+			OwingGameEvent->SetAndActiveNextGameEventSequence(NextGameEvent->GetGameEventSequence(OwingGameEvent, NextEdge));
 		}
 		else
 		{
-			GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(NextGameEvent->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
+			OwingGameEvent->SetAndActiveNextGameEventSequence(nullptr);
 		}
 	}
 }

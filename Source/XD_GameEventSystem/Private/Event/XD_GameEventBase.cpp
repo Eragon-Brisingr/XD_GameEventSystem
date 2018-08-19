@@ -43,7 +43,7 @@ void UXD_GameEventBase::ReinitGameEvent(class UXD_GameEventManager* GameEventOwn
 		WorldContext = GameEventOwner->GetWorld()->GetGameInstance()->GetWorldContext();
 		if (GameEventSequence)
 		{
-			GameEventSequence->GameEventOuter_GameEventBase = this;
+			GameEventSequence->OwingGameEvent = this;
 			GameEventSequence->ReinitGameEventSequence();
 		}
 	}
@@ -117,7 +117,7 @@ void UXD_GameEventBase::OnRep_CurrentGameEventSequenceList()
 	{
 		if (GameEventSequence)
 		{
-			GameEventSequence->GameEventOuter_GameEventBase = this;
+			GameEventSequence->OwingGameEvent = this;
 		}
 	}
 	if (CurrentGameEventSequenceList.Num() > 1)
@@ -129,8 +129,10 @@ void UXD_GameEventBase::OnRep_CurrentGameEventSequenceList()
 void UXD_GameEventBase::SetAndActiveNextGameEventSequence(class UXD_GameEventSequenceBase* NextGameEventSequence)
 {
 	UXD_GameEventSequenceBase* FinishGameEventSequence = GetUnderwayGameEventSequence();
+	GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GetGameEventName().ToString(), *FinishGameEventSequence->GetDescribe().ToString());
 	if (NextGameEventSequence)
 	{
+		FinishGameEventSequence->DeactiveGameEventSequence();
 		CurrentGameEventSequenceList.Add(NextGameEventSequence);
 		NextGameEventSequence->ActiveGameEventSequence();
 		WhenFinishedGameEventSequence(FinishGameEventSequence, NextGameEventSequence);
@@ -140,7 +142,6 @@ void UXD_GameEventBase::SetAndActiveNextGameEventSequence(class UXD_GameEventSeq
 		WhenFinishedGameEventSequence(FinishGameEventSequence, nullptr);
 		FinishGameEvent();
 	}
-	GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GetGameEventName().ToString(), *FinishGameEventSequence->GetDescribe().ToString());
 }
 
 class APawn* UXD_GameEventBase::GetGameEventOwnerCharacter() const
@@ -150,7 +151,15 @@ class APawn* UXD_GameEventBase::GetGameEventOwnerCharacter() const
 
 class AController* UXD_GameEventBase::GeGameEventOwnerController() const
 {
-	return Cast<AController>(GameEventOwner->GetOwner());
+	if (AController* Controller = Cast<AController>(GameEventOwner->GetOwner()))
+	{
+		return Controller;
+	}
+	else if (APawn* Pawn = Cast<APawn>(GameEventOwner->GetOwner()))
+	{
+		return Pawn->GetController();
+	}
+	return nullptr;
 }
 
 void UXD_GameEventBase::ActiveGameEvent(class UXD_GameEventManager* GameEventExecuter)
@@ -165,6 +174,7 @@ void UXD_GameEventBase::ActiveGameEvent(class UXD_GameEventManager* GameEventExe
 
 void UXD_GameEventBase::FinishGameEvent()
 {
+	GetUnderwayGameEventSequence()->DeactiveGameEventSequence();
 	GameEventState = EGameEventState::Finish_Succeed;
 	GameEventOwner->UnderwayGameEventList.Remove(this);
 	GameEventOwner->FinishGameEventList.Add(this);
@@ -181,7 +191,6 @@ void UXD_GameEventBase::WhenFinishedGameEventSequence_Implementation(class UXD_G
 
 void UXD_GameEventBase::ForceFinishGameEvent(EGameEventState State)
 {
-	GetUnderwayGameEventSequence()->FinishAllGameEventElement();
 	FinishGameEvent();
 	GameEventState = State;
 }

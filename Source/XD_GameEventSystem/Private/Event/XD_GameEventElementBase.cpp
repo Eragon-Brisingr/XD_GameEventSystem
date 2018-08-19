@@ -7,7 +7,7 @@
 #define LOCTEXT_NAMESPACE "游戏事件"
 
 UXD_GameEventElementBase::UXD_GameEventElementBase()
-	:bIsMust(true), bIsShowGameEventElement(true), bIsFinish(false)//, bIsActive(true)
+	:bIsMust(true), bIsShowGameEventElement(true), bIsFinished(false)//, bIsActive(true)
 {
 
 }
@@ -31,7 +31,7 @@ void UXD_GameEventElementBase::GetLifetimeReplicatedProps(TArray<class FLifetime
 		BPClass->GetLifetimeBlueprintReplicationList(OutLifetimeProps);
 	}
 
-	DOREPLIFETIME(UXD_GameEventElementBase, bIsFinish);
+	DOREPLIFETIME(UXD_GameEventElementBase, bIsFinished);
 	DOREPLIFETIME(UXD_GameEventElementBase, bIsMust);
 	DOREPLIFETIME(UXD_GameEventElementBase, bIsShowGameEventElement);
 
@@ -49,22 +49,22 @@ FText UXD_GameEventElementBase::ReceiveGetDescribe_Implementation() const
 
 void UXD_GameEventElementBase::FinishGameEventElement(class UXD_GameEventGraphEdge* NextEdge)
 {
-	if (bIsFinish == false)
+	if (bIsFinished == false)
 	{
-		bIsFinish = true;
-		GameEventOuter_GameEventSequence->InvokeFinishGameEventSequence(this, NextEdge);
-		GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]中的游戏事件元素[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GetGameEvent()->GetGameEventName().ToString(), *GameEventOuter_GameEventSequence->GetDescribe().ToString(), *GetName());
+		bIsFinished = true;
+		GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]中的游戏事件元素[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GetGameEvent()->GetGameEventName().ToString(), *OwingGameEventSequence->GetDescribe().ToString(), *GetName());
+		OwingGameEventSequence->InvokeFinishGameEventSequence(this, NextEdge);
 	}
 }
 
-void UXD_GameEventElementBase::IsFinishFalse()
+void UXD_GameEventElementBase::SetReactive()
 {
-	if (bIsFinish == true)
+	if (bIsFinished == true)
 	{
-		bIsFinish = false;
-		if (bIsMust && GameEventOuter_GameEventSequence->GameEventElementList.Contains(this))
+		bIsFinished = false;
+		if (bIsMust && OwingGameEventSequence->GameEventElementList.Contains(this))
 		{
-			GameEventOuter_GameEventSequence->WhenGameEventElementReUnfinished();
+			OwingGameEventSequence->WhenGameEventElementReactive();
 		}
 	}
 }
@@ -77,15 +77,10 @@ void UXD_GameEventElementBase::ActivateGameEventElement()
 void UXD_GameEventElementBase::UnactiveGameEventElement()
 {
 	WhenUnactiveGameEventElement(GetGameEventOwnerCharacter(), GetGameEventOwnerController());
-	if (bIsFinish)
+	if (bIsFinished)
 	{
 		WhenFinishGameEventElement(GetGameEventOwnerCharacter(), GetGameEventOwnerController());
 	}
-}
-
-void UXD_GameEventElementBase::SetTemplate_Implementation(const class UGenericGraphNodeBase* NodeBase)
-{
-
 }
 
 TArray<FGenericGraph_NewEdgeParamers> UXD_GameEventElementBase::GetFinishGameEventElementBranchEdgeTemplates_Implementation(UObject* Outer, const class UXD_GameEventGraphNode* GameEventGraphNode) const
@@ -95,17 +90,17 @@ TArray<FGenericGraph_NewEdgeParamers> UXD_GameEventElementBase::GetFinishGameEve
 
 class AController* UXD_GameEventElementBase::GetGameEventOwnerController() const
 {
-	return GameEventOuter_GameEventSequence->GameEventOuter_GameEventBase->GeGameEventOwnerController();
+	return OwingGameEventSequence->OwingGameEvent->GeGameEventOwnerController();
 }
 
 class APawn* UXD_GameEventElementBase::GetGameEventOwnerCharacter() const
 {
-	return GameEventOuter_GameEventSequence->GameEventOuter_GameEventBase->GetGameEventOwnerCharacter();
+	return OwingGameEventSequence->OwingGameEvent->GetGameEventOwnerCharacter();
 }
 
 class UXD_GameEventBase* UXD_GameEventElementBase::GetGameEvent() const
 {
-	return GameEventOuter_GameEventSequence ? GameEventOuter_GameEventSequence->GameEventOuter_GameEventBase : nullptr;
+	return OwingGameEventSequence ? OwingGameEventSequence->OwingGameEvent : nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE

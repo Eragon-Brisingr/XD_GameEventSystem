@@ -35,14 +35,14 @@ private:
 public:
 	UPROPERTY()
 	TArray<class UXD_GameEventBase*> PreUnderwayGameEventList;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "游戏事件", ReplicatedUsing = OnRep_UnderwayGameEventList, SaveGame)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "游戏事件", ReplicatedUsing = OnRep_UnderwayGameEventList, SaveGame)
 	TArray<class UXD_GameEventBase*> UnderwayGameEventList;
 	UFUNCTION()
 	void OnRep_UnderwayGameEventList();
 
 	UPROPERTY()
 	TArray<class UXD_GameEventBase*> PreFinishGameEventList;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, AdvancedDisplay, Category = "游戏事件", ReplicatedUsing = OnRep_FinishGameEventList, SaveGame)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, AdvancedDisplay, Category = "游戏事件", ReplicatedUsing = OnRep_FinishGameEventList, SaveGame)
 	TArray<class UXD_GameEventBase*> FinishGameEventList;
 	UFUNCTION()
 	void OnRep_FinishGameEventList();

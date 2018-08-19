@@ -133,20 +133,28 @@ void UXD_GameEventManager::OnRep_FinishGameEventList()
 
 void UXD_GameEventManager::ApplyGameEvent(class UXD_GameEventGraph* GameEventGraph)
 {
-	class UXD_GameEventBase* GameEvent = UXD_GameEventBase::NewGameEvent(this, GameEventGraph);
-	UnderwayGameEventList.Add(GameEvent);
-	OnRep_UnderwayGameEventList();
-	//最后再激活，防止游戏事件瞬间完成
-	GameEvent->ActiveGameEvent(this);
+	if (GameEventGraph)
+	{
+		class UXD_GameEventBase* GameEvent = UXD_GameEventBase::NewGameEvent(this, GameEventGraph);
+		GameEventSystem_Display_LOG("%s 接受了游戏事件 %s", *UXD_DebugFunctionLibrary::GetDebugName(GetOwner()), *GameEvent->GetGameEventName().ToString());
+
+		UnderwayGameEventList.Add(GameEvent);
+		OnRep_UnderwayGameEventList();
+		//最后再激活，防止游戏事件瞬间完成
+		GameEvent->ActiveGameEvent(this);
+	}
 }
 
 bool UXD_GameEventManager::IsGameEventExistInUnderwayList(class UXD_GameEventGraph* GameEvent)
 {
-	for (UXD_GameEventBase* E_GameEvent : UnderwayGameEventList)
+	if (GameEvent)
 	{
-		if (E_GameEvent->IsEqualWithOtherGameEvent(GameEvent))
+		for (UXD_GameEventBase* E_GameEvent : UnderwayGameEventList)
 		{
-			return true;
+			if (E_GameEvent->IsEqualWithOtherGameEvent(GameEvent))
+			{
+				return true;
+			}
 		}
 	}
 	return false;
@@ -154,11 +162,14 @@ bool UXD_GameEventManager::IsGameEventExistInUnderwayList(class UXD_GameEventGra
 
 bool UXD_GameEventManager::IsGameEventExistInFinishList(class UXD_GameEventGraph* GameEvent)
 {
-	for (UXD_GameEventBase* E_GameEvent : FinishGameEventList)
+	if (GameEvent)
 	{
-		if (E_GameEvent->IsEqualWithOtherGameEvent(GameEvent))
+		for (UXD_GameEventBase* E_GameEvent : FinishGameEventList)
 		{
-			return true;
+			if (E_GameEvent->IsEqualWithOtherGameEvent(GameEvent))
+			{
+				return true;
+			}
 		}
 	}
 	return false;

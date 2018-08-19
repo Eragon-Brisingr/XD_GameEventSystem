@@ -41,19 +41,19 @@ public:
 	void OnRep_GameEventElementList();
 
 	UPROPERTY(BlueprintReadOnly, Category = "角色|游戏事件")
-	class UXD_GameEventBase* GameEventOuter_GameEventBase;
+	class UXD_GameEventBase* OwingGameEvent;
 
 	virtual void ActiveGameEventSequence();
 
 	bool HasMustGameEventElement();
 
-	virtual void FinishAllGameEventElement();
+	virtual void DeactiveGameEventSequence();
 
 	//任务元素向任务序列申请完成该序列，是否完成交由该任务序列判断
 	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge);
 
 	//当游戏事件元素从完成变为未完成 e.g.需收集的道具开始达到要求，之后被减少了
-	virtual void WhenGameEventElementReUnfinished(){}
+	virtual void WhenGameEventElementReactive(){}
 
 	bool IsEveryMustGameEventElementFinished() const;
 
@@ -78,11 +78,11 @@ public:
 
 	virtual void ActiveGameEventSequence() override;
 
-	virtual void FinishAllGameEventElement() override;
+	virtual void DeactiveGameEventSequence() override;
 
 	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge) override;
 
-	virtual void WhenGameEventElementReUnfinished() override;
+	virtual void WhenGameEventElementReactive() override;
 
 	virtual void DrawHintInWorld(class AHUD* ARPG_HUD, int32 Index, bool IsFinishBranch) override;
 

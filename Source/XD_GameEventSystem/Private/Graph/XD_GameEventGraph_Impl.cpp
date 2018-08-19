@@ -16,6 +16,7 @@ UXD_GameEventGraphNode_GameEventSequenceBase::UXD_GameEventGraphNode_GameEventSe
 	BackgroundColor = GameEventSequenceColor;
 	CategoryName = LOCTEXT("游戏事件序列", "游戏事件序列");
 	SpecialDecoratorTypes.Add(UXD_GameEventGraphDecorator_GameEventElement::StaticClass());
+	Describe = LOCTEXT("游戏事件描述_未填写", "游戏事件描述_未填写");
 #endif
 }
 
@@ -42,7 +43,7 @@ class UXD_GameEventSequenceBase* UXD_GameEventGraphNode_GameEventSequence_Branch
 {
 	UGameEventSequence_Branch* GameEventSequence = NewObject<UGameEventSequence_Branch>(GameEvent);
 	GameEventSequence->GameEventSequenceTemplate = this;
-	GameEventSequence->GameEventOuter_GameEventBase = GameEvent;
+	GameEventSequence->OwingGameEvent = GameEvent;
 
 	for (UXD_GameEventGraphDecorator_GameEventElement* Decorator_GameEventElement : GetDecoratorsByType<UXD_GameEventGraphDecorator_GameEventElement>())
 	{
@@ -57,7 +58,7 @@ class UXD_GameEventSequenceBase* UXD_GameEventGraphNode_GameEventSequence_Branch
 		FGameEventElementFinishWarpper GameEventElementFinishWarpper;
 		GameEventElementFinishWarpper.GameEventFinishBranch = Node_FinishBranch;
 		UXD_GameEventElementBase* GameEventElementInstance = UXD_ObjectFunctionLibrary::DuplicateObject(Node_FinishBranch->GameEventElement, GameEventSequence);
-		GameEventElementInstance->GameEventOuter_GameEventSequence = GameEventSequence;
+		GameEventElementInstance->OwingGameEventSequence = GameEventSequence;
 		GameEventElementFinishWarpper.GameEventElement = GameEventElementInstance;
 
 		GameEventSequence->GameEventElementFinishList.Add(GameEventElementFinishWarpper);
@@ -171,7 +172,9 @@ class UXD_GameEventSequenceBase* UXD_GameEventGraphNode_GameEventSequence_List::
 {
 	UGameEventSequence_List* GameEventSequence = NewObject<UGameEventSequence_List>(GameEvent);
 	GameEventSequence->GameEventSequenceTemplate = this;
-	GameEventSequence->GameEventOuter_GameEventBase = GameEvent;
+	GameEventSequence->OwingGameEvent = GameEvent;
+
+	GameEventSequence->NextGameEvent = ChildrenNodes.Num() > 0 ? Cast<UXD_GameEventGraphNode>(ChildrenNodes[0]) : nullptr;
 
 	for (UXD_GameEventGraphDecorator_GameEventElement* Decorator_GameEventElement : GetDecoratorsByType<UXD_GameEventGraphDecorator_GameEventElement>())
 	{
@@ -231,7 +234,7 @@ UObject* UXD_GameEventGraphDecorator_GameEventElement::GetJumpTargetForDoubleCli
 class UXD_GameEventElementBase* UXD_GameEventGraphDecorator_GameEventElement::GetGameEventElementInstance(class UXD_GameEventSequenceBase* GameEventSequence) const
 {
 	UXD_GameEventElementBase* GameEventElementInstance = UXD_ObjectFunctionLibrary::DuplicateObject(GameEventElement, GameEventSequence);
-	GameEventElementInstance->GameEventOuter_GameEventSequence = GameEventSequence;
+	GameEventElementInstance->OwingGameEventSequence = GameEventSequence;
 	return GameEventElementInstance;
 }
 

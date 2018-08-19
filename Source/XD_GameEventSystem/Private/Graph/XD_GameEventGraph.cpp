@@ -10,6 +10,7 @@ UXD_GameEventGraph::UXD_GameEventGraph()
 #if WITH_EDITORONLY_DATA
 	NodeType = UXD_GameEventGraphNode::StaticClass();
 	RootNodeType = UXD_GameEventGraphRootNode::StaticClass();
+	GameEventName = LOCTEXT("游戏事件_未命名", "游戏事件_未命名");
 #endif
 }
 
