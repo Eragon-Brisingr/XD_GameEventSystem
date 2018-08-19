@@ -64,6 +64,18 @@ public:
 	virtual class UXD_GameEventSequenceBase* GetGameEventSequence(class UXD_GameEventBase* GameEvent, class UXD_GameEventGraphEdge* NextEdge) const override;
 };
 
+UCLASS(meta = (DisplayName = "游戏事件序列_列表型"))
+class XD_GAMEEVENTSYSTEM_API UXD_GameEventGraphNode_GameEventSequence_List : public UXD_GameEventGraphNode_GameEventSequenceBase
+{
+	GENERATED_BODY()
+public:
+	virtual bool CanCreateConnectionWithOtherNode_Implementation(UGenericGraphNode* Other, FText& ErrorMessage) const override;
+
+	virtual void CheckNodeError_Implementation(EGenericGraphNodeCheckMessageType& GenericGraphNodeCheckMessageType, FString& Message, const FGenericGraphNodeErrorCollector& ErrorCollector) const override;
+
+	virtual class UXD_GameEventSequenceBase* GetGameEventSequence(class UXD_GameEventBase* GameEvent, class UXD_GameEventGraphEdge* NextEdge) const override;
+};
+
 UCLASS(meta = (DisplayName = "游戏事件元素"))
 class XD_GAMEEVENTSYSTEM_API UXD_GameEventGraphDecorator_GameEventElement : public UXD_GameEventGraphDecorator
 {

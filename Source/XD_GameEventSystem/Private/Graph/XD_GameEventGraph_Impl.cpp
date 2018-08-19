@@ -143,6 +143,47 @@ class UXD_GameEventSequenceBase* UXD_GameEventGraphNode_FinishBranch::GetGameEve
 	return GetNodeByEdge<UXD_GameEventGraphNode>(NextEdge)->GetGameEventSequence(GameEvent, nullptr);
 }
 
+bool UXD_GameEventGraphNode_GameEventSequence_List::CanCreateConnectionWithOtherNode_Implementation(UGenericGraphNode* Other, FText& ErrorMessage) const
+{
+	if (Other->IsA<UXD_GameEventGraphNode_FinishBranch>())
+	{
+		ErrorMessage = LOCTEXT("不可连接游戏事件结束分支", "不可连接游戏事件结束分支");
+		return false;
+	}
+	else if (ChildrenNodes.Num() >= 1)
+	{
+		ErrorMessage = LOCTEXT("只能连接一个游戏事件序列", "只能连接一个游戏事件序列");
+		return false;
+	}
+	return true;
+}
+
+void UXD_GameEventGraphNode_GameEventSequence_List::CheckNodeError_Implementation(EGenericGraphNodeCheckMessageType& GenericGraphNodeCheckMessageType, FString& Message, const FGenericGraphNodeErrorCollector& ErrorCollector) const
+{
+	if (Decorators.Num() == 0)
+	{
+		GenericGraphNodeCheckMessageType = EGenericGraphNodeCheckMessageType::Error;
+		Message = TEXT("必须存在游戏事件元素");
+	}
+}
+
+class UXD_GameEventSequenceBase* UXD_GameEventGraphNode_GameEventSequence_List::GetGameEventSequence(class UXD_GameEventBase* GameEvent, class UXD_GameEventGraphEdge* NextEdge) const
+{
+	UGameEventSequence_List* GameEventSequence = NewObject<UGameEventSequence_List>(GameEvent);
+	GameEventSequence->GameEventSequenceTemplate = this;
+	GameEventSequence->GameEventOuter_GameEventBase = GameEvent;
+
+	for (UXD_GameEventGraphDecorator_GameEventElement* Decorator_GameEventElement : GetDecoratorsByType<UXD_GameEventGraphDecorator_GameEventElement>())
+	{
+		if (Decorator_GameEventElement->GameEventElement)
+		{
+			GameEventSequence->GameEventElementList.Add(Decorator_GameEventElement->GetGameEventElementInstance(GameEventSequence));
+		}
+	}
+
+	return GameEventSequence;
+}
+
 UXD_GameEventGraphDecorator_GameEventElement::UXD_GameEventGraphDecorator_GameEventElement()
 {
 #if WITH_EDITORONLY_DATA

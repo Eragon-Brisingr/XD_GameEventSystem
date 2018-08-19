@@ -59,6 +59,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
 	FORCEINLINE bool GetIsFinish() const { return bIsFinish; }
 
+	//游戏事件元素中可能也存在分支，比如说和某人对话中出现的分支
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
 	void FinishGameEventElement(class UXD_GameEventGraphEdge* NextEdge);
 

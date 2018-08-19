@@ -75,7 +75,7 @@ void UXD_GameEventSequenceBase::InvokeFinishGameEventSequence(class UXD_GameEven
 
 bool UXD_GameEventSequenceBase::IsEveryMustGameEventElementFinished() const
 {
-	for (auto& GameEventElement : GameEventElementList)
+	for (UXD_GameEventElementBase* GameEventElement : GameEventElementList)
 	{
 		if (GameEventElement->bIsMust && !GameEventElement->GetIsFinish())
 		{
@@ -168,6 +168,12 @@ void UGameEventSequence_Branch::ActiveGameEventSequence()
 	InvokeActiveFinishList();
 }
 
+void UGameEventSequence_Branch::FinishAllGameEventElement()
+{
+	Super::FinishAllGameEventElement();
+	DeactiveFinishBranchs();
+}
+
 void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge)
 {
 	//激活结束游戏事件的关键游戏事件
@@ -178,10 +184,7 @@ void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEven
 	//结束游戏事件
 	else
 	{
-		FinishAllGameEventElement();
-		DeactiveFinishBranchs();
 		UXD_GameEventSequenceBase* FinishGameEventSequence = GameEventOuter_GameEventBase->GetUnderwayGameEventSequence();
-
 		for (FGameEventElementFinishWarpper& GameEventElementFinishWarpper : GameEventElementFinishList)
 		{
 			if (GameEventElement == GameEventElementFinishWarpper.GameEventElement)
@@ -190,18 +193,13 @@ void UGameEventSequence_Branch::InvokeFinishGameEventSequence(class UXD_GameEven
 				{
 					if (GameEventElementFinishWarpper.GameEventFinishBranch->ChildrenNodes.Num() > 0)
 					{
-						GameEventOuter_GameEventBase->CurrentGameEventSequenceList.Add(GameEventElementFinishWarpper.GameEventFinishBranch->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
-
-						GameEventOuter_GameEventBase->GetUnderwayGameEventSequence()->ActiveGameEventSequence();
-						GameEventOuter_GameEventBase->WhenFinishedGameEventSequence(FinishGameEventSequence, GameEventOuter_GameEventBase->GetUnderwayGameEventSequence());
+						GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(GameEventElementFinishWarpper.GameEventFinishBranch->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
 					}
 					else
 					{
-						GameEventOuter_GameEventBase->FinishGameEvent();
-						GameEventOuter_GameEventBase->WhenFinishedGameEventSequence(FinishGameEventSequence, nullptr);
+						GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(nullptr);
 					}
 				}
-				GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GameEventOuter_GameEventBase->GetGameEventName().ToString(), *FinishGameEventSequence->GetDescribe().ToString());
 				break;
 			}
 		}
@@ -267,6 +265,20 @@ void UGameEventSequence_Branch::OnRep_GameEventElementFinishList()
 	}
 }
 
+void UGameEventSequence_List::InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge)
+{
+	if (IsEveryMustGameEventElementFinished())
+	{
+		FinishAllGameEventElement();
+		if (NextGameEvent.IsValid())
+		{
+			GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(NextGameEvent->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
+		}
+		else
+		{
+			GameEventOuter_GameEventBase->SetAndActiveNextGameEventSequence(NextGameEvent->GetGameEventSequence(GameEventOuter_GameEventBase, NextEdge));
+		}
+	}
+}
+
 #undef LOCTEXT_NAMESPACE
-
-

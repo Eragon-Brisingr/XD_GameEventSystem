@@ -126,6 +126,23 @@ void UXD_GameEventBase::OnRep_CurrentGameEventSequenceList()
 	}
 }
 
+void UXD_GameEventBase::SetAndActiveNextGameEventSequence(class UXD_GameEventSequenceBase* NextGameEventSequence)
+{
+	UXD_GameEventSequenceBase* FinishGameEventSequence = GetUnderwayGameEventSequence();
+	if (NextGameEventSequence)
+	{
+		CurrentGameEventSequenceList.Add(NextGameEventSequence);
+		NextGameEventSequence->ActiveGameEventSequence();
+		WhenFinishedGameEventSequence(FinishGameEventSequence, NextGameEventSequence);
+	}
+	else
+	{
+		WhenFinishedGameEventSequence(FinishGameEventSequence, nullptr);
+		FinishGameEvent();
+	}
+	GameEventSystem_Display_LOG("%s完成[%s]中的游戏事件序列[%s]", *UXD_DebugFunctionLibrary::GetDebugName(GetGameEventOwnerCharacter()), *GetGameEventName().ToString(), *FinishGameEventSequence->GetDescribe().ToString());
+}
+
 class APawn* UXD_GameEventBase::GetGameEventOwnerCharacter() const
 {
 	return GeGameEventOwnerController()->GetPawn();

@@ -99,6 +99,9 @@ public:
 		return CurrentGameEventSequenceList[CurrentGameEventSequenceList.Num() - 1];
 	}
 
+	//NextGameEventSequence == nullptr 则完成该任务
+	void SetAndActiveNextGameEventSequence(class UXD_GameEventSequenceBase* NextGameEventSequence);
+
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
 	class APawn* GetGameEventOwnerCharacter() const;
 

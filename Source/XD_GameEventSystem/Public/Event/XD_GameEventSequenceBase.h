@@ -49,8 +49,10 @@ public:
 
 	virtual void FinishAllGameEventElement();
 
+	//任务元素向任务序列申请完成该序列，是否完成交由该任务序列判断
 	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge);
 
+	//当游戏事件元素从完成变为未完成 e.g.需收集的道具开始达到要求，之后被减少了
 	virtual void WhenGameEventElementReUnfinished(){}
 
 	bool IsEveryMustGameEventElementFinished() const;
@@ -62,7 +64,7 @@ public:
 	 
 };
 
-//TODO 完成必须的游戏事件元素之后出现分支
+//完成必须的游戏事件元素之后出现分支
 UCLASS()
 class XD_GAMEEVENTSYSTEM_API UGameEventSequence_Branch : public UXD_GameEventSequenceBase
 {
@@ -76,11 +78,13 @@ public:
 
 	virtual void ActiveGameEventSequence() override;
 
-	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge);
+	virtual void FinishAllGameEventElement() override;
 
-	virtual void WhenGameEventElementReUnfinished();
+	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge) override;
 
-	virtual void DrawHintInWorld(class AHUD* ARPG_HUD, int32 Index, bool IsFinishBranch);
+	virtual void WhenGameEventElementReUnfinished() override;
+
+	virtual void DrawHintInWorld(class AHUD* ARPG_HUD, int32 Index, bool IsFinishBranch) override;
 
 	void InvokeActiveFinishList();
 
@@ -93,11 +97,15 @@ public:
 
 };
 
-//TODO 完成所有必须的游戏事件元素之后即进行下一个序列
+//完成所有必须的游戏事件元素之后即进行下一个序列
 UCLASS()
-class XD_GAMEEVENTSYSTEM_API UGameEventSequence_FinishAllElement : public UXD_GameEventSequenceBase
+class XD_GAMEEVENTSYSTEM_API UGameEventSequence_List : public UXD_GameEventSequenceBase
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(SaveGame)
+	TSoftObjectPtr<class UXD_GameEventGraphNode> NextGameEvent;
+
+	virtual void InvokeFinishGameEventSequence(class UXD_GameEventElementBase* GameEventElement, class UXD_GameEventGraphEdge* NextEdge);
 };
 
