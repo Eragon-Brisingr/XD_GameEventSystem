@@ -27,6 +27,7 @@ void UXD_GameEventSequenceBase::GetLifetimeReplicatedProps(TArray<class FLifetim
 	}
 
 	DOREPLIFETIME(UXD_GameEventSequenceBase, GameEventElementList);
+	DOREPLIFETIME(UXD_GameEventSequenceBase, GameEventSequenceTemplate);
 }
 
 void UXD_GameEventSequenceBase::ReplicatedGameEventElement(bool& WroteSomething, class UActorChannel * Channel, class FOutBunch * Bunch, FReplicationFlags * RepFlags)

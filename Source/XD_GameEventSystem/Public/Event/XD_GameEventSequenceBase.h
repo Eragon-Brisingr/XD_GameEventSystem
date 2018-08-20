@@ -26,7 +26,7 @@ public:
 
 	virtual void ReinitGameEventSequence();
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "角色|游戏事件", SaveGame)
+	UPROPERTY(BlueprintReadOnly, Category = "角色|游戏事件", SaveGame, Replicated)
 	TSoftObjectPtr<class UXD_GameEventGraphNode_GameEventSequenceBase> GameEventSequenceTemplate;
 
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")

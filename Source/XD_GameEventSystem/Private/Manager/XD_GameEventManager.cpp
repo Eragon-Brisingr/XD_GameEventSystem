@@ -36,8 +36,8 @@ void UXD_GameEventManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(UXD_GameEventManager, UnderwayGameEventList, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(UXD_GameEventManager, FinishGameEventList, COND_OwnerOnly);
+	DOREPLIFETIME(UXD_GameEventManager, UnderwayGameEventList);
+	DOREPLIFETIME(UXD_GameEventManager, FinishGameEventList);
 }
 
 bool UXD_GameEventManager::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
@@ -133,7 +133,7 @@ void UXD_GameEventManager::OnRep_FinishGameEventList()
 
 void UXD_GameEventManager::ApplyGameEvent(class UXD_GameEventGraph* GameEventGraph)
 {
-	if (GameEventGraph)
+	if (GetOwner()->HasAuthority() && GameEventGraph)
 	{
 		class UXD_GameEventBase* GameEvent = UXD_GameEventBase::NewGameEvent(this, GameEventGraph);
 		GameEventSystem_Display_LOG("%s 接受了游戏事件 %s", *UXD_DebugFunctionLibrary::GetDebugName(GetOwner()), *GameEvent->GetGameEventName().ToString());

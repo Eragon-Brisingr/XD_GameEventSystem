@@ -47,7 +47,7 @@ public:
 	UFUNCTION()
 	void OnRep_FinishGameEventList();
 
-	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
+	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件", BlueprintAuthorityOnly)
 	void ApplyGameEvent(class UXD_GameEventGraph* GameEventGraph);
 
 	UFUNCTION(BlueprintCallable, Category = "角色|游戏事件")
