@@ -28,7 +28,7 @@ public:
 
 	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override; 
 
-	virtual void WhenLoad_Implementation() override;
+	virtual void WhenPostLoad_Implementation() override;
 private:
 	void ReplicatedGameEventList(const TArray<UXD_GameEventBase*>& GameEventList, bool& WroteSomething, class UActorChannel * Channel, class FOutBunch * Bunch, FReplicationFlags * RepFlags);
 	//游戏事件

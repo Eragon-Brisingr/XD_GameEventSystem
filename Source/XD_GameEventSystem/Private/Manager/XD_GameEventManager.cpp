@@ -50,7 +50,7 @@ bool UXD_GameEventManager::ReplicateSubobjects(class UActorChannel *Channel, cla
 	return WroteSomething;
 }
 
-void UXD_GameEventManager::WhenLoad_Implementation()
+void UXD_GameEventManager::WhenPostLoad_Implementation()
 {
 	//恢复游戏事件
 	for (UXD_GameEventBase* GameEvent : UnderwayGameEventList)
